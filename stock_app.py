@@ -87,144 +87,63 @@ buid_data_for_display(eth_data, 'ETH')
 buid_data_for_display(ada_data, 'ADA')
 
 app.layout = html.Div([
-    html.H1("Stock Price Analysis Dashboard", style={"textAlign": "center"}),
+    html.H1("Crypto Currency Close Price Analysis Dashboard", style={"textAlign": "center"}),
     dcc.Tabs(id="tabs", children=[
-        dcc.Tab(label='BTC-USD',children=[
+        dcc.Tab(label='Crypto Currency Close Price',children=[
 			html.Div([
-				html.H2("BTC Actual closing price",style={"textAlign": "center"}),
-				dcc.Graph(
-					id="BTC Actual Data",
-					figure={
-						"data":[
-							go.Scatter(
-								x=result["BTC"]["train"].index,
-								y=result["BTC"]["valid"]["Close"],
-								mode='markers'
-							)
-
-						],
-						"layout":go.Layout(
-							title='scatter plot',
-							xaxis={'title':'Date'},
-							yaxis={'title':'Closing Rate'}
-						)
-					}
-
-				),
-				html.H2("BTC LSTM Predicted closing price",style={"textAlign": "center"}),
-				dcc.Graph(
-					id="BTC Predicted Data",
-					figure={
-						"data":[
-							go.Scatter(
-								x=result["BTC"]["valid"].index,
-								y=result["BTC"]["valid"]["Predictions"],
-								mode='markers'
-							)
-
-						],
-						"layout":go.Layout(
-							title='scatter plot',
-							xaxis={'title':'Date'},
-							yaxis={'title':'Closing Rate'}
-						)
-					}
-
-				)				
+				html.H1("Crypto Currency Actual vs Predict Close Price", style={'textAlign': 'center'}),
+                dcc.Dropdown(id='my-dropdown',
+                             options=[{'label': 'BTC', 'value': 'BTC'},
+                                      {'label': 'ETH','value': 'ETH'}, 
+                                      {'label': 'ADA', 'value': 'ADA'}], 
+                             multi=True,value=['BTC'],
+                             style={"display": "block", "margin-left": "auto", 
+                                    "margin-right": "auto", "width": "60%"}),
+                dcc.Graph(id='highlow'),
 			])        		
-
-        ]),
-        dcc.Tab(label='ETH-USD',children=[
-			html.Div([
-				html.H2("ETH Actual closing price",style={"textAlign": "center"}),
-				dcc.Graph(
-					id="ETH Actual Data",
-					figure={
-						"data":[
-							go.Scatter(
-								x=result["ETH"]["train"].index,
-								y=result["ETH"]["valid"]["Close"],
-								mode='markers'
-							)
-
-						],
-						"layout":go.Layout(
-							title='scatter plot',
-							xaxis={'title':'Date'},
-							yaxis={'title':'Closing Rate'}
-						)
-					}
-
-				),
-				html.H2("ETH LSTM Predicted closing price",style={"textAlign": "center"}),
-				dcc.Graph(
-					id="ETH Predicted Data",
-					figure={
-						"data":[
-							go.Scatter(
-								x=result["ETH"]["valid"].index,
-								y=result["ETH"]["valid"]["Predictions"],
-								mode='markers'
-							)
-
-						],
-						"layout":go.Layout(
-							title='scatter plot',
-							xaxis={'title':'Date'},
-							yaxis={'title':'Closing Rate'}
-						)
-					}
-
-				)				
-			])        		
-
-        ]),
-        dcc.Tab(label='ADA-USD',children=[
-			html.Div([
-				html.H2("ADA Actual closing price",style={"textAlign": "center"}),
-				dcc.Graph(
-					id="ADA Actual Data",
-					figure={
-						"data":[
-							go.Scatter(
-								x=result["ADA"]["train"].index,
-								y=result["ADA"]["valid"]["Close"],
-								mode='markers'
-							)
-
-						],
-						"layout":go.Layout(
-							title='scatter plot',
-							xaxis={'title':'Date'},
-							yaxis={'title':'Closing Rate'}
-						)
-					}
-
-				),
-				html.H2("ADA LSTM Predicted closing price",style={"textAlign": "center"}),
-				dcc.Graph(
-					id="ADA Predicted Data",
-					figure={
-						"data":[
-							go.Scatter(
-								x=result["ADA"]["valid"].index,
-								y=result["ADA"]["valid"]["Predictions"],
-								mode='markers'
-							)
-
-						],
-						"layout":go.Layout(
-							title='scatter plot',
-							xaxis={'title':'Date'},
-							yaxis={'title':'Closing Rate'}
-						)
-					}
-
-				)				
-			])        		
-        ]),
+        ])
     ])
 ])
+
+@app.callback(Output('highlow', 'figure'), [Input('my-dropdown', 'value')])
+def update_graph(selected_dropdown):
+    dropdown = {"BTC": "BTC","ETH": "ETH","ADA": "ADA"}
+    trace1 = []
+    trace2 = []
+    trace3 = []
+    for stock in selected_dropdown:
+        df = result[stock]["valid"]
+        trace1.append(
+          go.Scatter(x=df["Close"].index,
+                     y=df["Close"],
+                     mode='lines', opacity=0.7, 
+                     name=f'{dropdown[stock]} Actual Close Price',textposition='bottom center'))
+        trace2.append(
+          go.Scatter(x=df["Close"].index,
+                     y=df["Predictions"],
+                     mode='lines', opacity=0.6,
+                     name=f'{dropdown[stock]} Predict Close Price',textposition='bottom center'))
+        trace3.append(
+          go.Scatter(x=df["Close"].index,
+                     y=df["Predictions"] - df["Close"],
+                     mode='lines', opacity=0.6,
+                     name=f'{dropdown[stock]} Diff Between Price',textposition='bottom center'))
+    traces = [trace1, trace2, trace3]
+    data = [val for sublist in traces for val in sublist]
+    figure = {'data': data, 'layout': go.Layout(colorway=["#5E0DAC", '#FF4F00', '#375CB1', '#FF7400', '#FFF400', '#FF0056', '#FF8400', '#FFF500', '#FF1056'],
+            height=600,
+            title=f"Actual and Predict Close Prices for {', '.join(str(dropdown[i]) for i in selected_dropdown)} Over Time",
+            xaxis={"title":"Date",
+                   'rangeselector': {'buttons': list([{'count': 1, 'label': '1M', 
+                                                       'step': 'month', 
+                                                       'stepmode': 'backward'},
+                                                      {'count': 6, 'label': '6M', 
+                                                       'step': 'month', 
+                                                       'stepmode': 'backward'},
+                                                      {'step': 'all'}])},
+                   'rangeslider': {'visible': True}, 'type': 'date'},
+             yaxis={"title":"Price (USD)"})}
+    return figure
 
 if __name__=='__main__':
 	app.run_server(debug=True)
