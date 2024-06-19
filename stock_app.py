@@ -4,7 +4,7 @@ import dash_html_components as html
 import pandas as pd
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
-from keras.models import load_model
+from keras.models import load_model # type: ignore
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 
@@ -13,8 +13,6 @@ app = dash.Dash()
 server = app.server
 
 scaler=MinMaxScaler(feature_range=(0,1))
-
-
 
 df_nse = pd.read_csv("./NSE-TATA.csv")
 
@@ -123,7 +121,6 @@ app.layout = html.Div([
 				)				
 			])        		
 
-
         ]),
         dcc.Tab(label='Facebook Stock Data', children=[
             html.Div([
@@ -153,18 +150,11 @@ app.layout = html.Div([
             ], className="container"),
         ])
 
-
     ])
 ])
 
 
-
-
-
-
-
-@app.callback(Output('highlow', 'figure'),
-              [Input('my-dropdown', 'value')])
+@app.callback(Output('highlow', 'figure'), [Input('my-dropdown', 'value')])
 def update_graph(selected_dropdown):
     dropdown = {"TSLA": "Tesla","AAPL": "Apple","FB": "Facebook","MSFT": "Microsoft",}
     trace1 = []
@@ -200,8 +190,7 @@ def update_graph(selected_dropdown):
     return figure
 
 
-@app.callback(Output('volume', 'figure'),
-              [Input('my-dropdown2', 'value')])
+@app.callback(Output('volume', 'figure'), [Input('my-dropdown2', 'value')])
 def update_graph(selected_dropdown_value):
     dropdown = {"TSLA": "Tesla","AAPL": "Apple","FB": "Facebook","MSFT": "Microsoft",}
     trace1 = []
@@ -229,8 +218,6 @@ def update_graph(selected_dropdown_value):
                    'rangeslider': {'visible': True}, 'type': 'date'},
              yaxis={"title":"Transactions Volume"})}
     return figure
-
-
 
 if __name__=='__main__':
 	app.run_server(debug=True)
