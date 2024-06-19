@@ -95,6 +95,6 @@ def build_model(df, name):
     plt.plot(valid_data[['Close',"Predictions"]])
     plt.savefig(name + '_result_close.png')
 
-build_model(btc_data, 'btc')
-build_model(eth_data, 'eth')
-build_model(ada_data, 'ada')
+build_model(btc_data, 'BTC')
+build_model(eth_data, 'ETH')
+build_model(ada_data, 'ADA')
